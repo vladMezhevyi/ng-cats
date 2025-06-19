@@ -1,8 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Component, inject, PLATFORM_ID } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { take } from 'rxjs';
+import { CatService } from './cat/services/cat.service';
 
 @Component({
   selector: 'ct-root',
@@ -10,5 +9,17 @@ import { take } from 'rxjs';
   styleUrl: './app.component.scss',
 })
 export class App {
+  private readonly catService = inject(CatService);
+  private readonly platformId = inject(PLATFORM_ID);
 
+  constructor() {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    this.catService
+      .getRandomCat()
+      .pipe(take(1))
+      .subscribe((response) => {
+        console.log('Response: ', response);
+      });
+  }
 }
