@@ -27,11 +27,17 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
+    "@angular-eslint/schematics": "^20.1.1",
     "@angular/build": "^20.0.3",
     "@angular/cli": "^20.0.3",
     "@angular/compiler-cli": "^20.0.0",
     "@types/express": "^5.0.1",
     "@types/node": "^20.17.19",
-    "typescript": "~5.8.2"
+    "angular-eslint": "^20.1.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.0",
+    "prettier": "^3.5.3",
+    "typescript": "~5.8.2",
+    "typescript-eslint": "^8.34.1"
   }
 }

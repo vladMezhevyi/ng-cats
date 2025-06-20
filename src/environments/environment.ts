@@ -1,4 +1,4 @@
-import { Environment } from "../app/shared/types/environment.interface";
+import { Environment } from "../app/shared/models/environment.model";
 
 export const environment: Environment = {
   production: false,
