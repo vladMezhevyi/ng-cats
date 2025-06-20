@@ -1,0 +1,15 @@
+:host {
+  --mat-toolbar-title-text-size: var(--mat-sys-body-medium);
+
+  .text {
+    margin: 0;
+  }
+
+  .separator {
+    margin: 0 0.5rem;
+  }
+
+  .year {
+    margin-left: auto;
+  }
+}

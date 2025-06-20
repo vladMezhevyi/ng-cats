@@ -1,0 +1,17 @@
+:host {
+  .mat-toolbar {
+    gap: 1rem;
+  }
+
+  .nav {
+    margin-left: auto;
+  }
+
+  .nav-list {
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
