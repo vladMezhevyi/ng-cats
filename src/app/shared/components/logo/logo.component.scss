@@ -1,0 +1,12 @@
+:host {
+  .logo {
+    --mat-button-text-label-text-size: var(--mat-sys-title-large);
+    --logo-icon-size: 30px;
+
+    .mat-icon {
+      width: var(--logo-icon-size);
+      height: var(--logo-icon-size);
+      font-size: var(--logo-icon-size);
+    }
+  }
+}

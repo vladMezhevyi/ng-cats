@@ -1,25 +1,15 @@
-import { isPlatformBrowser } from '@angular/common';
 import { Component, inject, PLATFORM_ID } from '@angular/core';
-import { take } from 'rxjs';
-import { CatService } from './cat/services/cat.service';
+import { RouterOutlet } from '@angular/router';
+import { HeaderComponent } from './core/layouts/header/header.component';
 
 @Component({
   selector: 'ct-root',
+  imports: [RouterOutlet, HeaderComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
 export class App {
-  private readonly catService = inject(CatService);
   private readonly platformId = inject(PLATFORM_ID);
 
-  constructor() {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    this.catService
-      .getRandomCat()
-      .pipe(take(1))
-      .subscribe((response) => {
-        console.log('Response: ', response);
-      });
-  }
+  constructor() {}
 }
