@@ -37,7 +37,8 @@ module.exports = tseslint.config(
         }
       ],
       'prettier/prettier': 'error',
-      '@typescript-eslint/no-explicit-any': 'warn'
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-inferrable-types': 'off'
     }
   },
   {
