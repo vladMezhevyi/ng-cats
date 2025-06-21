@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { inject, PLATFORM_ID, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Observable, of, startWith, switchMap } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 import { createInitialState, withObservableState, WithState } from './with-observable-state.util';
 
 export interface CtStateOptions<Response, Arguments = void> {
@@ -23,21 +23,16 @@ export const ctState = <Response, Arguments = void, Error = unknown>(
       null,
       null
     );
-    return toSignal<WithState<Response, Error>, WithState<Response, Error>>(of(serverState), {
-      initialValue: serverState
-    });
+    return toSignal(of(serverState), { initialValue: serverState });
   }
 
   const initialValue: Response | null = options.initialValue ?? null;
-  let stream$: Observable<WithState<Response, Error>> | null = null;
+  let stream$: Observable<WithState<Response, Error>> | null;
 
   if (options.trigger) {
     stream$ = options.trigger.pipe(
       switchMap((args) =>
         withObservableState<Response, Error>(options.request(args), initialValue, true)
-      ),
-      startWith<WithState<Response, Error>>(
-        createInitialState<Response, Error>(false, initialValue)
       )
     );
   } else {
@@ -48,7 +43,5 @@ export const ctState = <Response, Arguments = void, Error = unknown>(
     isBrowser && !options.trigger,
     initialValue
   );
-  return toSignal<WithState<Response, Error>, WithState<Response, Error>>(stream$, {
-    initialValue: initialSignalState
-  });
+  return toSignal(stream$, { initialValue: initialSignalState });
 };
