@@ -1,4 +1,6 @@
 :host {
+  --nav-link-horizontal-padding: 0.75rem;
+
   .mat-toolbar {
     gap: 1rem;
   }
@@ -13,5 +15,10 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  .nav-link {
+    --mat-button-text-horizontal-padding: var(--nav-link-horizontal-padding);
+    --mat-button-filled-horizontal-padding: var(--nav-link-horizontal-padding);
   }
 }
