@@ -15,5 +15,5 @@ export class LogoComponent {
   public readonly routerLinkPath = input<string>('/home');
   public readonly label = input<string>('NgCats');
 
-  public logoClick = output<MouseEvent>();
+  public readonly logoClick = output<MouseEvent>();
 }
