@@ -17,11 +17,11 @@ export const createInitialState = <Response, Error = unknown>(
 });
 
 export const withObservableState = <Response, Error = unknown>(
-  observable: Observable<Response>,
+  source: Observable<Response>,
   initialValue: Response | null = null,
   showInitialLoading: boolean = true
 ): Observable<WithState<Response, Error>> =>
-  observable.pipe(
+  source.pipe(
     map((data) => createInitialState<Response, Error>(false, data)),
     catchError((error: Error) =>
       of<WithState<Response, Error>>(createInitialState<Response, Error>(false, null, error))
