@@ -2,7 +2,7 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
   {
-    path: '**',
+    path: '',
     renderMode: RenderMode.Prerender
   },
   {
@@ -16,5 +16,9 @@ export const serverRoutes: ServerRoute[] = [
   {
     path: 'gallery',
     renderMode: RenderMode.Server
+  },
+  {
+    path: '**',
+    renderMode: RenderMode.Prerender
   }
 ];
