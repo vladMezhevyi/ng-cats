@@ -1,205 +1,183 @@
 import { isPlatformBrowser } from '@angular/common';
-import { inject, makeStateKey, PLATFORM_ID, Signal, StateKey, TransferState } from '@angular/core';
+import {
+  inject,
+  makeStateKey,
+  PLATFORM_ID,
+  signal,
+  Signal,
+  StateKey,
+  TransferState
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Observable, of, switchMap, tap } from 'rxjs';
-import { createInitialState, withObservableState, WithState } from './with-observable-state.util';
+import { catchError, map, Observable, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
 
 /**
  * Options for configuring the `ctState` function.
- * @template Response The expected type of the response from the `request` observable.
+ * @template Res The expected type of the response from the `request` observable.
  * @template Arguments The type of arguments that can be passed to the `request` function and `trigger` observable. Defaults to `void`.
+ * @template Err The type of error that can be caught during the request. Defaults to `unknown`.
  */
-export interface CtStateOptions<Response, Arguments = void> {
+export interface CtStateConfig<Res, Args = void, Err = unknown> {
   /**
    * A function that returns an Observable representing the data request.
    * It can optionally accept arguments if a `trigger` is provided.
    */
-  request: (args?: Arguments) => Observable<Response>;
+  request: (args?: Args) => Observable<Res>;
+
   /**
-   * An optional Observable that, when it emits, will trigger a new request.
+   * An Observable that, when it emits, will trigger a new request.
    * The emitted value from the trigger will be passed as arguments to the `request` function.
    */
-  trigger?: Observable<Arguments>;
+  trigger: Observable<Args>;
+
   /**
    * An optional initial value for the state's `data` property before the first request completes.
    */
-  initialValue?: Response | null;
+  initialState?: CtState<Res, Err> | null;
+
   /**
    * If `true`, the request will only be made in the browser environment.
    * This option cannot be used with `transferStateKey`.
    */
   onlyBrowser?: boolean;
+
   /**
    * An optional key used for Angular's TransferState mechanism.
    * If provided, data fetched on the server will be transferred to the browser to prevent re-fetching.
    * Cannot be an empty string if provided.
    */
   transferStateKey?: string;
+
+  /**
+   * An optional callback function that is executed when the data request successfully completes.
+   * @param response The data returned from the successful request.
+   */
+  onSuccess?: (response: Res) => void;
+
+  /**
+   * An optional callback function that is executed when the data request fails.
+   * @param error The error object from the failed request.
+   */
+  onError?: (error: Err) => void;
 }
 
 /**
- * Generates a unique key string for Angular's TransferState,
- * allowing for parameterized keys.
- * @param baseKey The base string for the key.
- * @param params Optional additional parameters (strings or numbers) to append to the base key,
- * separated by hyphens.
- * @returns A composite key string suitable for `TransferState`.
- *
- * @example
- * ```typescript
- * const key1 = createCtTransferStateKey('product-detail', 123); // returns 'product-detail-123'
- * const key2 = createCtTransferStateKey('user-list'); // returns 'user-list'
- * ```
+ * Represents the state structure managed by `ctActionState`.
+ * @template Res The type of the data held in the state.
+ * @template Err The type of the error held in the state. Defaults to `unknown`.
  */
-export const createCtTransferStateKey = (
-  baseKey: string,
-  ...params: (string | number)[]
-): string => {
-  return params.length > 0 ? `${baseKey}-${params.join('-')}` : baseKey;
-};
+export interface CtState<Res, Err = unknown> {
+  /**
+   * The actual data fetched by the request, or `null` if not yet loaded or an error occurred.
+   */
+  data: Res | null;
+
+  /**
+   * A boolean indicating if a data request is currently in progress.
+   */
+  loading: boolean;
+
+  /**
+   * The error object if the data request failed, or `null` if successful.
+   */
+  error: Err | null;
+}
 
 /**
- * Prevents common issues with `CtStateOptions` configuration by throwing errors
- * for incompatible or invalid settings.
- * @template Response The type of the response.
- * @template Error The type of the error.
- * @param options The options object for `ctState`.
- * @throws {Error} If `onlyBrowser` is true and `transferStateKey` is provided.
- * @throws {Error} If `transferStateKey` is an empty string.
- * @internal
+ * Returns a default initial state object for `CtState`.
+ * @template Res The type of the data for the state.
+ * @template Err The type of the error for the state. Defaults to `unknown`.
+ * @returns A new `CtState` object with `data`, `loading`, and `error` initialized to `null`, `false`, and `null` respectively.
  */
-const preventCtStateIssues = <Response, Error>(options: CtStateOptions<Response, Error>): void => {
-  if (options.onlyBrowser && options.transferStateKey) {
+export const getInitialState = <Res, Err = unknown>(): CtState<Res, Err> => ({
+  data: null,
+  loading: false,
+  error: null
+});
+
+/**
+ * Creates an Angular Signal that manages asynchronous state, including loading, data, and error states,
+ * with optional Server-Side Rendering (SSR) support via Angular's TransferState.
+ *
+ * @template Res The expected type of the response from the `request` observable.
+ * @template Args The type of arguments that can be passed to the `request` function and `trigger` observable. Defaults to `void`.
+ * @template Err The type of error that can be caught during the request. Defaults to `unknown`.
+ *
+ * @param config Configuration object for the state management, including `request`, `trigger`, and SSR options.
+ * @returns A readonly Angular Signal containing the current state (`CtState<Res, Err>`).
+ * @throws {Error} If `onlyBrowser` is `true` and `transferStateKey` is provided, as these options are mutually exclusive.
+ * @throws {Error} If `transferStateKey` is provided but is an empty string.
+ */
+export const ctActionState = <Res, Args = void, Err = unknown>(
+  config: CtStateConfig<Res, Args, Err>
+): Signal<CtState<Res, Err>> => {
+  // Validate configuration to prevent logical conflicts.
+  if (config.onlyBrowser && config.transferStateKey) {
     throw new Error("You can't use transfer state with onlyBrowser option");
   }
 
-  if (typeof options.transferStateKey === 'string' && options.transferStateKey === '') {
+  // Validate that if transferStateKey is provided, it's not an empty string.
+  if (typeof config.transferStateKey === 'string' && config.transferStateKey === '') {
     throw new Error('You provided wrong transfer state key');
   }
-};
-
-/**
- * Creates an Angular Signal that manages asynchronous state, supporting
- * server-side rendering (SSR) with TransferState, client-side only requests,
- * and request triggering.
- *
- * This function injects `PLATFORM_ID` and `TransferState` internally.
- *
- * @template Response The type of the data returned by the request.
- * @template Arguments The type of arguments that can be passed to the request function,
- * relevant when a `trigger` is used. Defaults to `void`.
- * @template Error The type of the error that can occur during the request. Defaults to `unknown`.
- *
- * @param options Configuration options for the state management.
- *
- * @returns An Angular `Signal` containing `WithState<Response, Error>`, which updates
- * with `data`, `loading`, and `error` as the request progresses.
- *
- * @example
- * // Basic usage for fetching data once on component initialization
- * const productState = ctState<{ id: number; name: string }>({
- *   request: () => this.productService.getProduct(123),
- *   transferStateKey: 'product-detail-123'
- * });
- *
- * @example
- * // Usage with a trigger (e.g., from a button click or route parameter change)
- * const userId$ = new Subject<number>();
- * const userState = ctState<{ id: number; name: string }, number>({
- *   request: (id) => this.userService.getUser(id),
- *   trigger: userId$.asObservable(),
- *   initialValue: { id: 0, name: 'Bob' },
- *   transferStateKey: 'user-detail'
- * });
- * // Later: userId$.next(456); to trigger a new request
- *
- * @example
- * // Browser-only request (e.g., for browser-specific APIs)
- * const geolocationState = ctState<{ lat: number; lng: number }>({
- *   request: () => from(navigator.geolocation.getCurrentPosition()),
- *   onlyBrowser: true
- * });
- */
-export const ctState = <Response, Arguments = void, Error = unknown>(
-  options: CtStateOptions<Response, Arguments>
-): Signal<WithState<Response, Error>> => {
-  preventCtStateIssues(options);
 
   const platformId = inject(PLATFORM_ID);
   const isBrowser = isPlatformBrowser(platformId);
   const transferState = inject(TransferState);
 
-  const stateKey: StateKey<Response> | null = options.transferStateKey
-    ? makeStateKey(`ct-state-${options.transferStateKey}`)
+  /**
+   * Creates a unique `StateKey` for TransferState, if `transferStateKey` is provided in the config.
+   * This key is used to save data on the server and retrieve it on the browser.
+   */
+  const stateKey: StateKey<Res> | null = config.transferStateKey
+    ? makeStateKey(`ct-state-${config.transferStateKey}`)
     : null;
 
-  // Handle onlyBrowser case immediately if not in browser
-  if (options.onlyBrowser && !isBrowser) {
-    const serverState: WithState<Response, Error> = createInitialState<Response, Error>(
-      false,
-      null,
-      null
-    );
-    return toSignal(of(serverState), { initialValue: serverState });
+  const initialState: CtState<Res, Err> = config.initialState ?? getInitialState<Res, Err>();
+
+  // If `onlyBrowser` is true and running on the server, return a static initial state
+  // to prevent requests from being made on the server.
+  if (config.onlyBrowser && !isBrowser) {
+    return signal(initialState).asReadonly();
   }
 
-  const initialValue: Response | null = options.initialValue ?? null;
-  let stream$: Observable<WithState<Response, Error>>;
+  const stream$: Observable<CtState<Res, Err>> = config.trigger.pipe(
+    switchMap((args) => {
+      let request$: Observable<Res>;
 
-  /**
-   * Internal helper function to manage the application of TransferState logic
-   * based on the environment and presence of a `stateKey`.
-   * @param sourceObservable The original Observable representing the data request.
-   * @returns An Observable wrapped with `WithState` that incorporates TransferState optimizations.
-   * @internal
-   */
-  const handleTransferState = (
-    source: Observable<Response>
-  ): Observable<WithState<Response, Error>> => {
-    // If no stateKey, bypass transfer state logic
-    if (!stateKey) {
-      return withObservableState<Response, Error>(source, initialValue, true);
-    }
-
-    if (isBrowser) {
-      let savedResponse: Response | null = transferState.get(stateKey, null);
-
-      if (savedResponse !== null) {
-        // Use saved response from TransferState. No initial loading needed.
-        return withObservableState<Response, Error>(of(savedResponse), initialValue, false).pipe(
-          tap(() => {
-            // Clean up after use to prevent stale data
-            transferState.remove(stateKey);
-            savedResponse = null;
-          })
-        );
+      // Determine whether to fetch data or attempt to retrieve from TransferState.
+      if (!stateKey || !isBrowser) {
+        request$ = config.request(args);
       } else {
-        // No saved data, execute the actual request. Show initial loading.
-        return withObservableState<Response, Error>(source, initialValue, true);
+        const savedResponse: Res | null = transferState.get(stateKey, null);
+        request$ = savedResponse === null ? config.request(args) : of(savedResponse);
       }
-    } else {
-      // On server, execute request and save the response to TransferState.
-      // No initial loading on server as it will be resolved before rendering.
-      return withObservableState<Response, Error>(
-        source.pipe(tap((response) => transferState.set(stateKey, response))),
-        initialValue,
-        false
+
+      return request$.pipe(
+        tap((response) => {
+          if (!stateKey) return;
+
+          // In the browser, remove the key after hydration; on the server, set the key.
+          if (isBrowser) {
+            transferState.remove(stateKey);
+          } else {
+            transferState.set(stateKey, response);
+          }
+        }),
+        map((response) => {
+          config.onSuccess?.(response);
+          return { ...initialState, data: response };
+        }),
+        catchError((error) => {
+          config.onError?.(error);
+          return of({ ...initialState, error });
+        }),
+        startWith({ ...initialState, loading: true })
       );
-    }
-  };
-
-  if (options.trigger) {
-    stream$ = options.trigger.pipe(switchMap((args) => handleTransferState(options.request(args))));
-  } else {
-    stream$ = handleTransferState(options.request());
-  }
-
-  // Determine the initial state for the signal.
-  // Loading is true in browser if there's no trigger and no transfer state key,
-  // because a request will immediately start in the browser without server pre-rendering.
-  const initialSignalState: WithState<Response, Error> = createInitialState<Response, Error>(
-    isBrowser && !options.trigger && !stateKey,
-    initialValue
+    }),
+    startWith({ ...initialState, loading: true }),
+    shareReplay(1)
   );
-  return toSignal(stream$, { initialValue: initialSignalState });
+
+  return toSignal(stream$, { initialValue: initialState });
 };
