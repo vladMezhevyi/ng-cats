@@ -1,0 +1,20 @@
+:host(.skeleton) {
+  --skeleton-width: 100%;
+  --skeleton-height: 100%;
+  --skeleton-bg-base-color: var(--mat-sys-surface-container);
+  --skeleton-bg-shine-color: var(--mat-sys-surface-container-high);
+
+  display: block;
+  width: var(--skeleton-width);
+  height: var(--skeleton-height);
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-bg-base-color) 0%,
+    var(--skeleton-bg-shine-color) 50%,
+    var(--skeleton-bg-base-color) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--mat-sys-corner-medium);
+  overflow: hidden;
+  animation: skeleton-loading 1.5s infinite linear;
+}
