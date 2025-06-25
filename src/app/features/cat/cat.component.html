@@ -1,1 +1,29 @@
-<p>cat works!</p>
+@let state = catState();
+
+<div class="cat-container">
+  <header class="cat-header">
+    <button type="button" matButton="filled" (click)="triggerUpdate()" [disabled]="state.loading">
+      Surprise Me
+      <mat-icon>refresh</mat-icon>
+    </button>
+
+    <button type="button" matButton="tonal" (click)="share()">
+      Share
+      <mat-icon>link</mat-icon>
+    </button>
+  </header>
+
+  <section class="cat-section">
+    @if (state.loading) {
+      <div class="cat-image-wrapper">
+        <ct-skeleton class="cat-image-skeleton"></ct-skeleton>
+      </div>
+    } @else if (state.data) {
+      <div class="cat-image-wrapper">
+        <img class="cat-image" [src]="state.data.url" alt="Cat with id - {{ state.data.id }}" />
+      </div>
+    } @else {
+      <div>Unable to load cat image...</div>
+    }
+  </section>
+</div>

@@ -12,4 +12,8 @@ export class CatApiService {
   public getRandomCat(): Observable<Cat> {
     return this.http.get<Cat>('/cat');
   }
+
+  public getCatById(catId: string): Observable<Cat> {
+    return this.http.get<Cat>(`/cat/${catId}`);
+  }
 }
