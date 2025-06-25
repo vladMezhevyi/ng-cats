@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   effect,
   inject,
@@ -14,11 +15,16 @@ import { CatApiService } from 'app/core/api/cat-api.service';
 import { Cat } from 'app/core/models/cat.model';
 import { ctActionState } from 'app/core/utils/ct-state.util';
 import { Observable, Subject, take } from 'rxjs';
+import { MatCardModule } from '@angular/material/card';
+import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'ct-cat',
   templateUrl: './cat.component.html',
   styleUrl: './cat.component.scss',
+  imports: [MatCardModule, SkeletonComponent, MatButtonModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CatComponent {
@@ -37,6 +43,8 @@ export class CatComponent {
     trigger: this.trigger.asObservable(),
     transferStateKey: 'cat'
   });
+
+  protected readonly currentCatId = computed<string | undefined>(() => this.catState().data?.id);
 
   constructor() {
     const effectRef = effect(() => {
