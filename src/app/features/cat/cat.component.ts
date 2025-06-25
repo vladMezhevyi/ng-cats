@@ -14,11 +14,12 @@ import { Router } from '@angular/router';
 import { CatApiService } from 'app/core/api/cat-api.service';
 import { Cat } from 'app/core/models/cat.model';
 import { ctActionState } from 'app/core/utils/ct-state.util';
-import { Observable, Subject, take } from 'rxjs';
+import { from, Observable, Subject, take } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { SnackbarService } from 'app/core/services/snackbar.service';
 
 @Component({
   selector: 'ct-cat',
@@ -32,6 +33,7 @@ export class CatComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly snackbarService = inject(SnackbarService);
 
   public readonly catId = input.required<string | undefined>();
   private readonly trigger = new Subject<string | undefined>();
@@ -57,6 +59,19 @@ export class CatComponent {
     this.trigger.next(catId);
   }
 
+  protected share(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const url: string = this.getCurrentUrl();
+
+    from(navigator.clipboard.writeText(url))
+      .pipe(take(1))
+      .subscribe({
+        next: () => this.snackbarService.open('Copied to clipboard!', 'success', 'Close'),
+        error: () => this.snackbarService.open('Failed to copy text', 'error', 'Close')
+      });
+  }
+
   private getCat(catId?: string): Observable<Cat> {
     return catId ? this.catApiService.getCatById(catId) : this.catApiService.getRandomCat();
   }
@@ -68,5 +83,12 @@ export class CatComponent {
       replaceUrl: true,
       queryParams: { catId }
     });
+  }
+
+  private getCurrentUrl(): string {
+    const params: URLSearchParams = new URLSearchParams(window.location.search);
+    return params.get('catId')
+      ? window.location.href
+      : `${window.location.href}?catId=${this.currentCatId()}`;
   }
 }
