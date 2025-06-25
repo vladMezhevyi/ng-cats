@@ -1,10 +1,16 @@
 {
   "version": 2,
-  "builds": [{ "src": "/dist/ng-cats/server/server.mjs", "use": "@vercel/static-build" }],
-  "routes": [
+  "public": true,
+  "name": "ng-cats",
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/api"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "dist/ng-cats/**"
+    }
+  }
 }
