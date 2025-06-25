@@ -1,0 +1,26 @@
+<mat-toolbar>
+  <ct-logo type="link" routerLinkPath="/home"></ct-logo>
+
+  <nav class="nav">
+    <ul class="nav-list">
+      @for (item of navItems(); track item.path) {
+        <li class="nav-list-item">
+          <ng-container
+            [ngTemplateOutlet]="linkEl"
+            [ngTemplateOutletContext]="{ item }"></ng-container>
+        </li>
+      }
+    </ul>
+  </nav>
+</mat-toolbar>
+
+<ng-template #linkEl let-item="item">
+  <a
+    #rtl="routerLinkActive"
+    class="nav-link"
+    routerLinkActive="active-nav-link"
+    [matButton]="rtl.isActive ? 'filled' : 'text'"
+    [routerLink]="item.path">
+    {{ item.label }}
+  </a>
+</ng-template>

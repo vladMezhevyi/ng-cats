@@ -1,0 +1,24 @@
+:root {
+  // Size
+  --size-1: 4px;
+  --size-2: 8px;
+  --size-3: 12px;
+  --size-4: 16px;
+  --size-5: 24px;
+  --size-6: 32px;
+  --size-7: 40px;
+  --size-8: 48px;
+
+  // Spacing
+  --spacing-xs: var(--size-1); // 4px
+  --spacing-sm: var(--size-2); // 8px
+  --spacing-md: var(--size-4); // 16px
+  --spacing-lg: var(--size-5); // 24px
+  --spacing-xl: var(--size-6); // 32px
+
+  // Border radius
+  --border-radius-xs: var(--size-1); // 4px
+  --border-radius-sm: var(--size-2); // 8px
+  --border-radius-md: var(--size-3); // 12px
+  --border-radius-lg: var(--size-5); // 24px
+}

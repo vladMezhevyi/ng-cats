@@ -1,0 +1,15 @@
+@if (type() === 'button') {
+  <button matButton type="button" class="logo logo-btn" (click)="logoClick.emit($event)">
+    <mat-icon>hive</mat-icon>
+    {{ label() }}
+  </button>
+} @else {
+  <a
+    matButton
+    class="logo logo-link"
+    [routerLink]="routerLinkPath()"
+    (click)="logoClick.emit($event)">
+    <mat-icon>hive</mat-icon>
+    {{ label() }}
+  </a>
+}
