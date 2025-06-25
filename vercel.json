@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "builds": [{ "src": "/dist/ng-cats/server/server.mjs", "use": "@vercel/static-build" }],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
