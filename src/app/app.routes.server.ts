@@ -14,10 +14,6 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
-    path: 'gallery',
-    renderMode: RenderMode.Server
-  },
-  {
     path: '**',
     renderMode: RenderMode.Prerender
   }

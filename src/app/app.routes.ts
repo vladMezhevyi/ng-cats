@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { PageNotFoundComponent } from './features/page-not-found/page-not-found.component';
 
 export const routes: Routes = [
   {
@@ -15,8 +16,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/cat/cat.component').then((c) => c.CatComponent)
   },
   {
-    path: 'gallery',
-    loadComponent: () =>
-      import('./features/gallery/gallery.component').then((c) => c.GalleryComponent)
+    path: '**',
+    component: PageNotFoundComponent
   }
 ];

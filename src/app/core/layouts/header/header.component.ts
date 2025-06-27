@@ -26,8 +26,5 @@ interface NavItem {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderComponent {
-  public readonly navItems = input<NavItem[]>([
-    { path: '/cat', label: 'Cat' },
-    { path: '/gallery', label: 'Gallery' }
-  ]);
+  public readonly navItems = input<NavItem[]>([{ path: '/cat', label: 'Cat' }]);
 }

@@ -1,0 +1,9 @@
+:host {
+  flex-grow: 1;
+  display: grid;
+  place-items: center;
+
+  .not-found {
+    text-align: center;
+  }
+}

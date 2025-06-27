@@ -22,7 +22,7 @@ export interface CtStateConfig<Res, Args = void, Err = unknown> {
    * A function that returns an Observable representing the data request.
    * It can optionally accept arguments if a `trigger` is provided.
    */
-  request: (args?: Args) => Observable<Res>;
+  request: (args: Args) => Observable<Res>;
 
   /**
    * An Observable that, when it emits, will trigger a new request.
