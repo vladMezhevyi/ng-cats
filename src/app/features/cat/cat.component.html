@@ -14,16 +14,17 @@
   </header>
 
   <section class="cat-section">
-    @if (state.loading) {
-      <div class="cat-image-wrapper">
+    <div class="cat-image-wrapper">
+      @if (state.loading) {
         <ct-skeleton class="cat-image-skeleton"></ct-skeleton>
-      </div>
-    } @else if (state.data) {
-      <div class="cat-image-wrapper">
+      } @else if (state.data) {
         <img class="cat-image" [src]="state.data.url" alt="Cat with id - {{ state.data.id }}" />
-      </div>
-    } @else {
-      <div>Unable to load cat image...</div>
-    }
+      } @else {
+        <div class="cat-error">
+          <h2>Sorry, we couldn’t find the cat you’re looking for.</h2>
+          <p>It might have been adopted, teleported, or just never existed.</p>
+        </div>
+      }
+    </div>
   </section>
 </div>

@@ -9,11 +9,11 @@ import { Cat } from '../models/cat.model';
 export class CatApiService {
   private readonly http = inject(HttpClient);
 
-  public getRandomCat(): Observable<Cat> {
+  getRandomCat(): Observable<Cat> {
     return this.http.get<Cat>('/cat');
   }
 
-  public getCatById(catId: string): Observable<Cat> {
+  getCatById(catId: string): Observable<Cat> {
     return this.http.get<Cat>(`/cat/${catId}`);
   }
 }

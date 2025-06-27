@@ -3,5 +3,5 @@ export interface Cat {
   tags: string[];
   mimetype: string;
   createdAt: string;
-  url: string;
+  url?: string;
 }
